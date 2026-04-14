@@ -15,6 +15,11 @@ helm repo update
 read -rd '' DOMAIN \
 < <(yq -r '.domain' ./cluster-config.yaml)
 
+# Deploy shared ConfigMaps before services that mount them.
+helm dependency build ../charts/yas-configuration
+helm upgrade --install yas-configuration ../charts/yas-configuration \
+--namespace yas --create-namespace
+
 helm dependency build ../charts/backoffice-bff
 helm upgrade --install backoffice-bff ../charts/backoffice-bff \
 --namespace yas --create-namespace \
