@@ -1,6 +1,13 @@
 #!/bin/bash
 set -x
 
+# Set DISABLE_SERVICEMONITOR=true to skip creating ServiceMonitor resources.
+DISABLE_SERVICEMONITOR="${DISABLE_SERVICEMONITOR:-true}"
+SERVICE_MONITOR_ARGS=()
+if [ "$DISABLE_SERVICEMONITOR" = "true" ]; then
+    SERVICE_MONITOR_ARGS+=(--set backend.serviceMonitor.enabled=false)
+fi
+
 # Auto restart when change configmap or secret
 helm repo add stakater https://stakater.github.io/stakater-charts
 helm repo update
@@ -11,7 +18,8 @@ read -rd '' DOMAIN \
 helm dependency build ../charts/backoffice-bff
 helm upgrade --install backoffice-bff ../charts/backoffice-bff \
 --namespace yas --create-namespace \
---set backend.ingress.host="backoffice.$DOMAIN"
+--set backend.ingress.host="backoffice.$DOMAIN" \
+"${SERVICE_MONITOR_ARGS[@]}"
 
 helm dependency build ../charts/backoffice-ui
 helm upgrade --install backoffice-ui ../charts/backoffice-ui \
@@ -22,7 +30,8 @@ sleep 60
 helm dependency build ../charts/storefront-bff
 helm upgrade --install storefront-bff ../charts/storefront-bff \
 --namespace yas --create-namespace \
---set backend.ingress.host="storefront.$DOMAIN"
+--set backend.ingress.host="storefront.$DOMAIN" \
+"${SERVICE_MONITOR_ARGS[@]}"
 
 helm dependency build ../charts/storefront-ui
 helm upgrade --install storefront-ui ../charts/storefront-ui \
@@ -40,6 +49,7 @@ for chart in {"cart","customer","inventory","location","media","order","payment"
     helm dependency build ../charts/"$chart"
     helm upgrade --install "$chart" ../charts/"$chart" \
     --namespace yas --create-namespace \
-    --set backend.ingress.host="api.$DOMAIN"
+    --set backend.ingress.host="api.$DOMAIN" \
+    "${SERVICE_MONITOR_ARGS[@]}"
     sleep 60
 done
