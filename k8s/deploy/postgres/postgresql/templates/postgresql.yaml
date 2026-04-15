@@ -43,8 +43,8 @@ spec:
     promotion: {{ .Values.username }}
     rating: {{ .Values.username }}
     tax: {{ .Values.username }}
-    recommendation: { { .Values.username } }
-    webhook: { { .Values.username } }
+    recommendation: {{ .Values.username }}  # ✅ bỏ space thừa
+    webhook: {{ .Values.username }}          # ✅ bỏ space thừa
     grafana: {{ .Values.username }}
   patroni:
     slots:
@@ -93,6 +93,5 @@ spec:
         database: tax
         plugin: wal2json
   allowedSourceRanges:
-  # IP ranges to access your cluster go here
   resources:
-    {{ toYaml .Values.resources | nindent 4 }}
+    {{- toYaml .Values.resources | nindent 4 }}  # ✅ thêm dấu - để trim whitespace
